@@ -1,24 +1,26 @@
 {
   "version": 2,
-  "outputDirectory": "dist",
-  "buildCommand": "npm run vercel-build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": null,
-  "functions": {
-    "server/index.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/index.ts"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     },
     {
-      "source": "/((?!api|_next|hall|assets).*)",
-      "destination": "/index.html"
+      "src": "server/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
