@@ -79,13 +79,6 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Check if database is available
-      if (!process.env.MONGODB_URI) {
-        return res.status(503).json({ 
-          message: "Database not configured. Please contact support." 
-        });
-      }
-
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
@@ -109,13 +102,6 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    // Check if database is available
-    if (!process.env.MONGODB_URI) {
-      return res.status(503).json({ 
-        message: "Database not configured. Please contact support." 
-      });
-    }
-
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         console.error('Login error:', err);
@@ -149,13 +135,6 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     try {
-      // Check if database is available
-      if (!process.env.MONGODB_URI) {
-        return res.status(503).json({ 
-          message: "Database not configured. Please contact support." 
-        });
-      }
-
       if (!req.isAuthenticated()) {
         return res.status(401).json({ 
           message: "Not authenticated" 
