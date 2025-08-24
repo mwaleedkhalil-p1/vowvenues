@@ -79,6 +79,27 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      // Validate required fields
+      const { username, password, name, email } = req.body;
+      if (!username || !password || !name || !email) {
+        return res.status(400).json({ 
+          message: "All fields (username, password, name, email) are required" 
+        });
+      }
+
+      // Basic validation
+      if (password.length < 6) {
+        return res.status(400).json({ 
+          message: "Password must be at least 6 characters long" 
+        });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ 
+          message: "Username must be at least 3 characters long" 
+        });
+      }
+
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
@@ -102,6 +123,14 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    // Validate required fields
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ 
+        message: "Username and password are required" 
+      });
+    }
+
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         console.error('Login error:', err);

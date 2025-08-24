@@ -52,19 +52,19 @@ async function connectWithRetry() {
 connectWithRetry();
 
 mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
+  console.error('🔥 MongoDB connection error:', err);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
+  console.log('📡 MongoDB disconnected');
 });
 
 mongoose.connection.on('connected', () => {
-  console.log('MongoDB connected');
+  console.log('🟢 MongoDB connected to:', MONGODB_URI?.split('@')[1]?.split('?')[0] || 'database');
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.log('MongoDB reconnected');
+  console.log('🔄 MongoDB reconnected');
 });
 
 export default mongoose;
