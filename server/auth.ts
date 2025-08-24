@@ -37,13 +37,14 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: "your-secret-key",
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     },
   };
 
@@ -78,6 +79,13 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      // Check if database is available
+      if (!process.env.MONGODB_URI) {
+        return res.status(503).json({ 
+          message: "Database not configured. Please contact support." 
+        });
+      }
+
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
@@ -93,12 +101,43 @@ export function setupAuth(app: Express) {
         res.status(201).json(user);
       });
     } catch (error) {
-      next(error);
+      console.error('Registration error:', error);
+      res.status(500).json({ 
+        message: "Registration failed. Please try again later." 
+      });
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    // Check if database is available
+    if (!process.env.MONGODB_URI) {
+      return res.status(503).json({ 
+        message: "Database not configured. Please contact support." 
+      });
+    }
+
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ 
+          message: "Login failed. Please try again later." 
+        });
+      }
+      if (!user) {
+        return res.status(401).json({ 
+          message: "Invalid username or password" 
+        });
+      }
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Session login error:', loginErr);
+          return res.status(500).json({ 
+            message: "Login failed. Please try again later." 
+          });
+        }
+        res.json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -109,7 +148,25 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    try {
+      // Check if database is available
+      if (!process.env.MONGODB_URI) {
+        return res.status(503).json({ 
+          message: "Database not configured. Please contact support." 
+        });
+      }
+
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ 
+          message: "Not authenticated" 
+        });
+      }
+      res.json(req.user);
+    } catch (error) {
+      console.error('User route error:', error);
+      res.status(500).json({ 
+        message: "Failed to get user information" 
+      });
+    }
   });
 }

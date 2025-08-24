@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI environment variable is not set!');
+  console.error('Please set MONGODB_URI in your Vercel environment variables.');
+  // Don't exit in serverless environment, just log the error
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
+}
+
 mongoose.set('strictQuery', true);
 
 const connectOptions = {
@@ -18,6 +27,11 @@ const connectOptions = {
 };
 
 async function connectWithRetry() {
+  if (!MONGODB_URI) {
+    console.error('Cannot connect to MongoDB: MONGODB_URI is not set');
+    return;
+  }
+
   const maxRetries = 5;
   let retries = 0;
 
@@ -30,8 +44,12 @@ async function connectWithRetry() {
       retries++;
       console.error(`MongoDB connection attempt ${retries} failed:`, err);
       if (retries === maxRetries) {
-        console.error('Max retries reached. Exiting...');
-        process.exit(1);
+        console.error('Max retries reached. Cannot connect to MongoDB.');
+        // Don't exit in serverless environment
+        if (process.env.NODE_ENV !== 'production') {
+          process.exit(1);
+        }
+        return;
       }
       // Wait before retrying (exponential backoff)
       await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, retries), 10000)));
