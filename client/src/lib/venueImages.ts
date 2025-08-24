@@ -89,8 +89,8 @@ export function getVenueImages(venueName: string): VenueImage[] {
   }
 
   try {
-    // Use URL-friendly path and encode the folder name
-    const basePath = `/hall pictures data/${encodeURIComponent(folderName)}`;
+    // Use simple path without URL encoding for Vercel compatibility
+    const basePath = `/hall pictures data/${folderName}`;
     
     // Map of venue folders to their image file patterns
     const imagePatterns: { [key: string]: string[] } = {
