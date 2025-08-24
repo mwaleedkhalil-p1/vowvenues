@@ -13,6 +13,7 @@
     "build:client": "vite build",
     "build:server": "node build.mjs",
     "build": "npm run build:client && npm run build:server",
+    "vercel-build": "npm run build:client",
     "start": "node dist/server.js",
     "check": "tsc",
     "db:push": "drizzle-kit push"
